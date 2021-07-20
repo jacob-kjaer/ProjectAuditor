@@ -72,11 +72,11 @@ namespace Unity.ProjectAuditor.Editor.Auditors
             }
         }
 
-        void Collect(GameObject go)
+        public void Collect(GameObject go)
         {
             m_NumObjects++;
 
-            CollectMaterials(go);
+            CollectGameObjectMaterials(go);
             CollectModels(go);
 
             if (PrefabUtility.GetPrefabInstanceStatus(go) != PrefabInstanceStatus.NotAPrefab)
@@ -99,7 +99,7 @@ namespace Unity.ProjectAuditor.Editor.Auditors
             }
         }
 
-        void CollectMaterials(GameObject go)
+        void CollectGameObjectMaterials(GameObject go)
         {
             var renderers = go.GetComponents<Renderer>();
             foreach (var material in renderers.SelectMany(r => r.sharedMaterials))
@@ -107,41 +107,41 @@ namespace Unity.ProjectAuditor.Editor.Auditors
                 if (material == null)
                     continue;
 
-                var assetPath = AssetDatabase.GetAssetPath(material);
-                if (string.IsNullOrEmpty(assetPath))
-                    continue;
-                if (!m_Materials.ContainsKey(assetPath))
-                {
-                    var shader = material.shader;
-                    if (shader == null)
-                        continue;
-
-                    var shaderName = shader.name;
-                    if (!m_Shaders.ContainsKey(shaderName))
-                        m_Shaders.Add(shaderName, 0);
-
-                    m_Shaders[shaderName]++;
-#if UNITY_2019_3_OR_NEWER
-                    for (int i = 0; i < shader.GetPropertyCount(); i++)
-                    {
-                        if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
-                        {
-                            var texture = material.GetTexture(shader.GetPropertyName(i));
-                            if (texture == null)
-                                continue;
-
-                            var id = texture.GetInstanceID();
-                            if (!m_Textures.ContainsKey(id))
-                                m_Textures.Add(id, 0);
-
-                            m_Textures[id]++;
-                        }
-                    }
-#endif
-                    m_Materials.Add(assetPath, 0);
-                }
-                m_Materials[assetPath]++;
+                CollectMaterial(material);
             }
+        }
+
+        public void CollectMaterial(Material material)
+        {
+            var assetPath = AssetDatabase.GetAssetPath(material);
+            if (string.IsNullOrEmpty(assetPath))
+                return;
+            if (!m_Materials.ContainsKey(assetPath))
+            {
+                var shader = material.shader;
+                if (shader == null)
+                    return;
+
+                CollectShader(shader);
+
+#if UNITY_2019_3_OR_NEWER
+                for (int i = 0; i < shader.GetPropertyCount(); i++)
+                {
+                    if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
+                    {
+                        var texture = material.GetTexture(shader.GetPropertyName(i));
+                        if (texture == null)
+                            continue;
+
+                        CollectTexture(texture);
+                    }
+                }
+#endif
+
+                m_Materials.Add(assetPath, 0);
+            }
+
+            m_Materials[assetPath]++;
         }
 
         void CollectModels(GameObject go)
@@ -181,6 +181,24 @@ namespace Unity.ProjectAuditor.Editor.Auditors
                         mesh.isReadable
                     }));
             }
+        }
+
+        public void CollectShader(Shader shader)
+        {
+            var shaderName = shader.name;
+            if (!m_Shaders.ContainsKey(shaderName))
+                m_Shaders.Add(shaderName, 0);
+
+            m_Shaders[shaderName]++;
+        }
+
+        public void CollectTexture(Texture texture)
+        {
+            var id = texture.GetInstanceID();
+            if (!m_Textures.ContainsKey(id))
+                m_Textures.Add(id, 0);
+
+            m_Textures[id]++;
         }
 
         static int CalcTotalIndices(Mesh mesh)
@@ -356,7 +374,7 @@ namespace Unity.ProjectAuditor.Editor.Auditors
 #if ADDRESSABLES_ANALYZER_SUPPORT
         void AuditAddressables(Action<ProjectIssue> onIssueFound, SceneStatsCollector globalCollector)
         {
-            List<AddressableAssetEntry> assets = new List<AddressableAssetEntry>();
+            var assets = new List<AddressableAssetEntry>();
             foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
             {
                 foreach (var entry in group.entries)
@@ -366,6 +384,30 @@ namespace Unity.ProjectAuditor.Editor.Auditors
             {
                 if (entry.IsScene)
                     AnalyzeScene(onIssueFound, entry.AssetPath, globalCollector);
+                else
+                {
+                    var type = AssetDatabase.GetMainAssetTypeAtPath(entry.AssetPath);
+                    if (typeof(UnityEngine.GameObject).IsAssignableFrom(type))
+                    {
+                        var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(entry.AssetPath);
+                        globalCollector.Collect(obj);
+                    }
+                    else if (typeof(UnityEngine.Material).IsAssignableFrom(type))
+                    {
+                        var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(entry.AssetPath);
+                        globalCollector.CollectMaterial(obj);
+                    }
+                    else if (typeof(UnityEngine.Shader).IsAssignableFrom(type))
+                    {
+                        var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Shader>(entry.AssetPath);
+                        globalCollector.CollectShader(obj);
+                    }
+                    else if (typeof(UnityEngine.Texture).IsAssignableFrom(type))
+                    {
+                        var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Texture>(entry.AssetPath);
+                        globalCollector.CollectTexture(obj);
+                    }
+                }
             }
         }
 
