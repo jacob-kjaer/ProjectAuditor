@@ -24,6 +24,11 @@
             "name": "com.unity.rendering.hybrid",
             "expression": "",
             "define": "HYBRID_RENDERER_ANALYZER_SUPPORT"
+        },
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "ADDRESSABLES_ANALYZER_SUPPORT"
         }
     ],
     "noEngineReferences": false
