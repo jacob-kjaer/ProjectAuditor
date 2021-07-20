@@ -403,6 +403,28 @@ namespace Unity.ProjectAuditor.Editor.UI
                 },
                 analyticsEvent = (int)ProjectAuditorAnalytics.UIButton.BuildFiles
             });
+
+            ViewDescriptor.Register(new ViewDescriptor
+            {
+                category = ProjectAuditor.GetOrRegisterCategory("Models"),
+                name = "Models",
+                menuLabel = "Assets/Models",
+                menuOrder = 2,
+                showFilters = true,
+                onDoubleClick = EditorUtil.FocusOnAssetInProjectWindow //,
+                //analyticsEvent = (int)ProjectAuditorAnalytics.UIButton.Models
+            });
+            ViewDescriptor.Register(new ViewDescriptor
+            {
+                category = ProjectAuditor.GetOrRegisterCategory("Scenes"),
+                name = "Scenes",
+                menuLabel = "Assets/Scenes",
+                menuOrder = 3,
+                showDependencyView = false,
+                showFilters = true,
+                onDoubleClick = EditorUtil.FocusOnAssetInProjectWindow //,
+                //analyticsEvent = (int)ProjectAuditorAnalytics.UIButton.Scenes
+            });
         }
 
         void OnToggleDeveloperMode()
