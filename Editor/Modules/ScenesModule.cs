@@ -9,6 +9,11 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
+#if ADDRESSABLES_ANALYZER_SUPPORT
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+#endif
+
 namespace Unity.ProjectAuditor.Editor.Auditors
 {
     public enum ModelProperty
@@ -295,37 +300,7 @@ namespace Unity.ProjectAuditor.Editor.Auditors
                 if (!editorBuildSettingsScene.enabled)
                     continue;
 
-                if (!File.Exists(path))
-                    continue;
-
-                try
-                {
-                    var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-                    var collector = new SceneStatsCollector();
-
-                    collector.Collect(scene);
-
-                    globalCollector.Merge(collector);
-
-                    var stats = collector.GetStats();
-                    onIssueFound(new ProjectIssue(
-                        k_Descriptor,
-                        path,
-                        k_SceneLayout.category,
-                        path,
-                        new object[(int)SceneProperty.Num]
-                        {
-                            stats.objects,
-                            stats.prefabs,
-                            stats.materials,
-                            stats.shaders,
-                            stats.textures,
-                        }));
-                }
-                catch (Exception e)
-                {
-                    Debug.LogErrorFormat("Failed to open " + path);
-                }
+                AnalyzeScene(onIssueFound, path, globalCollector);
             }
 
             // restore previously-loaded scenes
@@ -343,8 +318,57 @@ namespace Unity.ProjectAuditor.Editor.Auditors
             if (progress != null)
                 progress.Clear();
 
+#if ADDRESSABLES_ANALYZER_SUPPORT
+            AuditAddressables(onIssueFound, globalCollector);
+#endif
             if (onComplete != null)
                 onComplete();
         }
+
+        static void AnalyzeScene(Action<ProjectIssue> onIssueFound, string path, SceneStatsCollector globalCollector)
+        {
+            if (!File.Exists(path))
+                return;
+
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            var collector = new SceneStatsCollector();
+
+            collector.Collect(scene);
+
+            globalCollector.Merge(collector);
+
+            var stats = collector.GetStats();
+            onIssueFound(new ProjectIssue(
+                k_Descriptor,
+                path,
+                k_SceneLayout.category,
+                path,
+                new object[(int)SceneProperty.Num]
+                {
+                    stats.objects,
+                    stats.prefabs,
+                    stats.materials,
+                    stats.shaders,
+                    stats.textures,
+                }));
+        }
+
+#if ADDRESSABLES_ANALYZER_SUPPORT
+        void AuditAddressables(Action<ProjectIssue> onIssueFound, SceneStatsCollector globalCollector)
+        {
+            List<AddressableAssetEntry> assets = new List<AddressableAssetEntry>();
+            foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
+            {
+                foreach (var entry in group.entries)
+                    entry.GatherAllAssets(assets, true, true, true);
+            }
+            foreach (var entry in assets)
+            {
+                if (entry.IsScene)
+                    AnalyzeScene(onIssueFound, entry.AssetPath, globalCollector);
+            }
+        }
+
+#endif
     }
 }

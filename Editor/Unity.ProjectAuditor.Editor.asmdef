@@ -1,6 +1,7 @@
 {
     "name": "Unity.ProjectAuditor.Editor",
     "references": [
+        "Unity.Addressables.Editor",
         "Unity.RenderPipelines.HighDefinition.Runtime"
     ],
     "includePlatforms": [
