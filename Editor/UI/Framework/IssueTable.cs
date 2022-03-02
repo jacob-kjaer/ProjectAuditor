@@ -246,24 +246,12 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
             {
                 if (columnIndex == 0)
                 {
-                    switch (descriptor.severity)
-                    {
-                        case Rule.Severity.Info:
-                            EditorGUI.LabelField(cellRect, EditorGUIUtility.TrTextContentWithIcon(item.GetDisplayName(), item.GetDisplayName(), "console.infoicon"), labelStyle);
-                            break;
-                        case Rule.Severity.Warning:
-                            EditorGUI.LabelField(cellRect, EditorGUIUtility.TrTextContentWithIcon(item.GetDisplayName(), item.GetDisplayName(), "console.warnicon"), labelStyle);
-                            break;
-                        case Rule.Severity.Error:
-                            EditorGUI.LabelField(cellRect, EditorGUIUtility.TrTextContentWithIcon(item.GetDisplayName(), item.GetDisplayName(), "console.erroricon"), labelStyle);
-                            break;
-                        default:
-                            EditorGUI.LabelField(cellRect, new GUIContent(item.GetDisplayName(), item.GetDisplayName()), labelStyle);
-                            break;
-                    }
+                    cellRect.xMax = args.rowRect.xMax; // use all available space so text doesn't get cropped
+                    EditorGUI.LabelField(cellRect, new GUIContent(item.GetDisplayName(), item.GetDisplayName()), labelStyle);
                 }
             }
             else
+            {
                 switch (columnType)
                 {
                     case PropertyType.CriticalContext:
@@ -331,6 +319,7 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
 
                         break;
                 }
+            }
 
             if (rule != null && rule.severity == Rule.Severity.None)
                 GUI.enabled = true;
