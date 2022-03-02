@@ -10,11 +10,6 @@ namespace Unity.ProjectAuditor.Editor.Utils
             return descriptor.areas.Select(a => (Area)Enum.Parse(typeof(Area), a)).ToArray();
         }
 
-        public static string GetAreasSummary(this ProblemDescriptor descriptor)
-        {
-            return Formatting.CombineStrings(descriptor.areas);
-        }
-
         public static string GetFullTypeName(this ProblemDescriptor descriptor)
         {
             return descriptor.type + "." + descriptor.method;

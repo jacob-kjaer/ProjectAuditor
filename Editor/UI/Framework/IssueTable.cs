@@ -236,9 +236,6 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
 
             var issue = item.ProjectIssue;
             var descriptor = item.ProblemDescriptor;
-            var areaNames = descriptor.GetAreasSummary();
-            var areaLongDescription = "Areas that this issue might have an impact on";
-
             var rule = m_Config.GetRule(descriptor, issue != null ? issue.GetCallingMethod() : string.Empty);
             if (rule == null && issue != null)
                 rule = m_Config.GetRule(descriptor); // try to find non-specific rule
@@ -265,8 +262,6 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                             break;
                     }
                 }
-                else if (columnType == PropertyType.Area)
-                    EditorGUI.LabelField(cellRect, new GUIContent(areaNames, areaLongDescription), labelStyle);
             }
             else
                 switch (columnType)
@@ -299,10 +294,6 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                     }
                     break;
 
-                    case PropertyType.Area:
-                        EditorGUI.LabelField(cellRect, new GUIContent(areaNames, areaLongDescription), labelStyle);
-                        break;
-
                     case PropertyType.Description:
                         GUIContent guiContent = null;
                         if (issue.location != null && m_Desc.descriptionWithIcon)
@@ -318,17 +309,18 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                         EditorGUI.LabelField(cellRect, guiContent, labelStyle);
                         break;
 
+                    case PropertyType.Area:
                     case PropertyType.Filename:
-                        // display fullpath as tooltip
-                        EditorGUI.LabelField(cellRect, new GUIContent(issue.GetProperty(PropertyType.Filename), issue.GetProperty(PropertyType.Path)), labelStyle);
-                        break;
-
-                    case PropertyType.Path:
-                        EditorGUI.LabelField(cellRect, new GUIContent(issue.GetProperty(PropertyType.Path)), labelStyle);
-                        break;
-
                     case PropertyType.FileType:
-                        EditorGUI.LabelField(cellRect, new GUIContent(issue.GetProperty(PropertyType.FileType)), labelStyle);
+                    case PropertyType.Path:
+                        var label = issue.GetProperty(columnType);
+                        var tooltip = label;
+                        if (columnType == PropertyType.Area)
+                            tooltip = "Areas that this issue might have an impact on";
+                        else if (columnType == PropertyType.Filename)
+                            tooltip = issue.GetProperty(PropertyType.Path); // display full path as tooltip
+
+                        EditorGUI.LabelField(cellRect, new GUIContent(label, tooltip), labelStyle);
                         break;
 
                     default:
@@ -564,12 +556,9 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                                 secondString = secondItem.GetDisplayName();
                                 break;
                             case PropertyType.Area:
-                                firstString = firstItem.ProblemDescriptor.GetAreasSummary();
-                                secondString = secondItem.ProblemDescriptor.GetAreasSummary();
-                                break;
                             case PropertyType.Filename:
-                            case PropertyType.Path:
                             case PropertyType.FileType:
+                            case PropertyType.Path:
                                 firstString = firstItem.ProjectIssue != null ? firstItem.ProjectIssue.GetProperty(property.type) : string.Empty;
                                 secondString = secondItem.ProjectIssue != null ? secondItem.ProjectIssue.GetProperty(property.type) : string.Empty;
                                 break;

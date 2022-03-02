@@ -13,7 +13,7 @@ namespace Unity.ProjectAuditor.Editor.Utils
                 case PropertyType.Severity:
                     return issue.severity.ToString();
                 case PropertyType.Area:
-                    return issue.descriptor.GetAreasSummary();
+                    return Formatting.CombineStrings(issue.descriptor.areas);
                 case PropertyType.FileType:
                     if (issue.location == null)
                         return k_NotAvailable;
