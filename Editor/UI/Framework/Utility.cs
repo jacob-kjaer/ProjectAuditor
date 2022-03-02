@@ -15,43 +15,6 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
 
         public static readonly GUIContent CopyToClipboard = new GUIContent("Copy to Clipboard");
 
-        public static GUIContent InfoIcon
-        {
-            get
-            {
-#if UNITY_2018_3_OR_NEWER
-                return EditorGUIUtility.TrIconContent(k_InfoIconName, "Info");
-#else
-                return new GUIContent(EditorGUIUtility.FindTexture(Utility.k_InfoIconName), "Info"), s_LabelStyle);
-#endif
-            }
-        }
-
-
-        public static GUIContent WarnIcon
-        {
-            get
-            {
-#if UNITY_2018_3_OR_NEWER
-                return EditorGUIUtility.TrIconContent(k_WarnIconName, "Warning");
-#else
-                return new GUIContent(EditorGUIUtility.FindTexture(Utility.k_WarnIconName), "Warning"), s_LabelStyle);
-#endif
-            }
-        }
-
-        public static GUIContent ErrorIcon
-        {
-            get
-            {
-#if UNITY_2018_3_OR_NEWER
-                return EditorGUIUtility.TrIconContent(k_ErrorIconName, "Error");
-#else
-                return new GUIContent(EditorGUIUtility.FindTexture(Utility.k_ErrorIconName), "Error"), s_LabelStyle);
-#endif
-            }
-        }
-
         public class DropdownItem
         {
             public GUIContent Content;
@@ -117,10 +80,10 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
         public static void DrawSelectedText(string text)
         {
 #if UNITY_2019_1_OR_NEWER
-            var treeViewSelectionStyle = (GUIStyle) "TV Selection";
+            var treeViewSelectionStyle = (GUIStyle)"TV Selection";
             var backgroundStyle = new GUIStyle(treeViewSelectionStyle);
 
-            var treeViewLineStyle = (GUIStyle) "TV Line";
+            var treeViewLineStyle = (GUIStyle)"TV Line";
             var textStyle = new GUIStyle(treeViewLineStyle);
 #else
             var textStyle = GUI.skin.label;
@@ -157,6 +120,37 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
             return EditorGUIUtility.TrIconContent(ProjectAuditor.PackagePath + "/Editor/Icons/" + name + ".png");
         }
 
+        public static GUIContent GetSeverityIcon(Rule.Severity severity, string tooltip = null)
+        {
+            string iconName;
+            switch (severity)
+            {
+                case Rule.Severity.Info:
+                    iconName = k_InfoIconName;
+                    if (string.IsNullOrEmpty(tooltip))
+                        tooltip = "Info";
+                    break;
+                case Rule.Severity.Warning:
+                    iconName = k_WarnIconName;
+                    if (string.IsNullOrEmpty(tooltip))
+                        tooltip = "Warning";
+                    break;
+                case Rule.Severity.Error:
+                    iconName = k_ErrorIconName;
+                    if (string.IsNullOrEmpty(tooltip))
+                        tooltip = "Error";
+                    break;
+                default:
+                    return null;
+            }
+
+#if UNITY_2019_3_OR_NEWER
+            return EditorGUIUtility.TrIconContent(iconName, tooltip);
+#else
+            return new GUIContent(EditorGUIUtility.FindTexture(iconName), tooltip);
+#endif
+        }
+
         public static GUIContent GetStatusWheel()
         {
             if (s_StatusWheel == null)
@@ -164,10 +158,9 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                 s_StatusWheel = new GUIContent[12];
                 for (int i = 0; i < 12; i++)
                     s_StatusWheel[i] = EditorGUIUtility.IconContent("WaitSpin" + i.ToString("00"));
-
             }
 
-            int frame = (int) Mathf.Repeat(Time.realtimeSinceStartup * 10, 11.99f);
+            int frame = (int)Mathf.Repeat(Time.realtimeSinceStartup * 10, 11.99f);
             return s_StatusWheel[frame];
         }
 

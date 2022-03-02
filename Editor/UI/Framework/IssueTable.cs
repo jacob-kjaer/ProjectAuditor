@@ -269,24 +269,12 @@ namespace Unity.ProjectAuditor.Editor.UI.Framework
                     case PropertyType.CriticalContext:
                     {
                         if (issue.isPerfCriticalContext)
-                            EditorGUI.LabelField(cellRect, Utility.WarnIcon, labelStyle);
+                            EditorGUI.LabelField(cellRect, Utility.GetSeverityIcon(Rule.Severity.Warning, "Potential hot-path"), labelStyle);
                     }
                     break;
                     case PropertyType.Severity:
                     {
-                        GUIContent icon = null;
-                        switch (issue.descriptor.severity)
-                        {
-                            case Rule.Severity.Info:
-                                icon = Utility.InfoIcon;
-                                break;
-                            case Rule.Severity.Warning:
-                                icon = Utility.WarnIcon;
-                                break;
-                            case Rule.Severity.Error:
-                                icon = Utility.ErrorIcon;
-                                break;
-                        }
+                        var icon = Utility.GetSeverityIcon(issue.severity);
                         if (icon != null)
                         {
                             EditorGUI.LabelField(cellRect, icon, labelStyle);
