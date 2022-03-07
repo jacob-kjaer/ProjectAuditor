@@ -19,7 +19,7 @@ namespace Unity.ProjectAuditor.Editor
             if (MatchesSearch(issue.description))
                 return true;
 
-            if (MatchesSearch(issue.filename))
+            if (MatchesSearch(issue.relativePath))
                 return true;
 
             var dependencies = issue.dependencies;
